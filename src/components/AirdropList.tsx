@@ -38,7 +38,9 @@ const ShowUnvaluedToggle = ({
   className?: string;
 }) => (
   <div className={`flex items-center gap-3 ${className}`}>
-    <span className="text-sm font-semibold text-gray-800">Show unvalued airdrops</span>
+    <span className="text-sm font-semibold text-gray-800">
+      Show unvalued airdrops
+    </span>
     <ToggleSwitch checked={value} onToggle={onToggle} />
   </div>
 );
@@ -48,11 +50,13 @@ export const AirdropList = () => {
   const isConnected = Boolean(publicKey);
   const [showUnvalued, setShowUnvalued] = useState(false);
   const skimZeroValued = !showUnvalued;
-  const { airdrops, claimableAirdrops, loading, error } = useAirdrops({ skimZeroValued });
+  const { airdrops, claimableAirdrops, loading, error } = useAirdrops({
+    skimZeroValued,
+  });
   const toggleShowUnvalued = () => setShowUnvalued((prev) => !prev);
 
   const claimableByDistributor = useMemo(() => {
-    const map: Record<string, typeof claimableAirdrops[number]> = {};
+    const map: Record<string, (typeof claimableAirdrops)[number]> = {};
     claimableAirdrops.forEach((item) => {
       map[item.distributorAddress] = item;
     });
@@ -64,7 +68,9 @@ export const AirdropList = () => {
       <div className="max-w-5xl mx-auto p-6">
         <WalletButton />
         <div className="mt-10 text-center rounded-2xl border border-purple-100 bg-white/80 p-10 shadow-sm">
-          <h1 className="text-3xl font-bold text-gray-900 mb-3">Discover Airdrops</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">
+            Discover Airdrops
+          </h1>
           <p className="text-gray-600 text-lg mb-6">
             Connect your wallet to see drops tailored to you.
           </p>
@@ -113,7 +119,9 @@ export const AirdropList = () => {
             onToggle={toggleShowUnvalued}
             className="justify-center mb-4"
           />
-          <p className="text-gray-700 mb-4 font-semibold">No airdrops found for your wallet</p>
+          <p className="text-gray-700 mb-4 font-semibold">
+            No airdrops found for your wallet
+          </p>
           <div className="flex justify-center">
             <Link
               to="/lookup"

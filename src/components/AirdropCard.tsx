@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom';
 import type { AirdropCardProps } from '@/types';
 import { getAirdropType, calculateClaimableAmount } from '@/utils/airdrop';
-import { formatNumber, formatTokenAmount, truncateAddress } from '@/utils/format';
+import {
+  formatNumber,
+  formatTokenAmount,
+  truncateAddress,
+} from '@/utils/format';
 import { useTokenMetadata } from '@/hooks/useTokenMetadata';
 import { RPC_ENDPOINT } from '@/constants';
 import { useState } from 'react';
@@ -12,7 +16,9 @@ const toNumber = (value?: string | null) => parseFloat(value ?? '0') || 0;
 
 export const AirdropCard = ({ airdrop, claimable }: AirdropCardProps) => {
   const [copied, setCopied] = useState(false);
-  const { metadata: tokenMetadata, loading: tokenLoading } = useTokenMetadata(airdrop.mint);
+  const { metadata: tokenMetadata, loading: tokenLoading } = useTokenMetadata(
+    airdrop.mint,
+  );
   const isDevnet = RPC_ENDPOINT.includes('devnet');
   const solscanUrl = `https://solscan.io/account/${airdrop.address}${isDevnet ? '?cluster=devnet' : ''}`;
 
@@ -28,7 +34,12 @@ export const AirdropCard = ({ airdrop, claimable }: AirdropCardProps) => {
     ? toNumber(claimable.amountUnlocked) + toNumber(claimable.amountLocked)
     : 0;
   const availableToClaim = claimable
-    ? toNumber(calculateClaimableAmount(claimable.amountUnlocked, claimable.amountClaimed))
+    ? toNumber(
+        calculateClaimableAmount(
+          claimable.amountUnlocked,
+          claimable.amountClaimed,
+        ),
+      )
     : 0;
 
   const totalValueUSD = tokenPriceUSD
@@ -105,14 +116,16 @@ export const AirdropCard = ({ airdrop, claimable }: AirdropCardProps) => {
             <span>Token Amount</span>
             <span className="font-semibold text-gray-900">
               {formatTokenAmount(airdrop.totalAmountClaimed, tokenDecimals)} /{' '}
-              {formatTokenAmount(airdrop.maxTotalClaim, tokenDecimals)} {tokenSymbol}
+              {formatTokenAmount(airdrop.maxTotalClaim, tokenDecimals)}{' '}
+              {tokenSymbol}
             </span>
           </div>
           {hasClaimable && (
             <div className="flex justify-between text-sm text-gray-600">
               <span>Total Allocation</span>
               <span className="font-semibold text-gray-900">
-                {formatTokenAmount(totalAllocation.toString(), tokenDecimals)} {tokenSymbol}
+                {formatTokenAmount(totalAllocation.toString(), tokenDecimals)}{' '}
+                {tokenSymbol}
               </span>
             </div>
           )}
@@ -120,7 +133,8 @@ export const AirdropCard = ({ airdrop, claimable }: AirdropCardProps) => {
             <div className="flex justify-between text-sm text-purple-700 bg-purple-50/60 border border-purple-100 rounded-xl px-3 py-2">
               <span className="font-semibold">Available to claim</span>
               <span className="font-semibold">
-                {formatTokenAmount(availableToClaim.toString(), tokenDecimals)} {tokenSymbol}
+                {formatTokenAmount(availableToClaim.toString(), tokenDecimals)}{' '}
+                {tokenSymbol}
               </span>
             </div>
           )}

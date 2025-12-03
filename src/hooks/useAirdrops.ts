@@ -1,14 +1,26 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
-import { fetchClaimableAirdrops, fetchAirdropsByAddresses } from '@/services/api';
-import type { Airdrop, ClaimableAirdrop, UseAirdropsOptions, UseAirdropsReturn } from '@/types';
+import {
+  fetchClaimableAirdrops,
+  fetchAirdropsByAddresses,
+} from '@/services/api';
+import type {
+  Airdrop,
+  ClaimableAirdrop,
+  UseAirdropsOptions,
+  UseAirdropsReturn,
+} from '@/types';
 
-export const useAirdrops = (options?: UseAirdropsOptions): UseAirdropsReturn => {
+export const useAirdrops = (
+  options?: UseAirdropsOptions,
+): UseAirdropsReturn => {
   const { publicKey } = useWallet();
   const walletAddress = publicKey?.toString() ?? null;
   const skimZeroValued = options?.skimZeroValued ?? false;
   const [airdrops, setAirdrops] = useState<Airdrop[]>([]);
-  const [claimableAirdrops, setClaimableAirdrops] = useState<ClaimableAirdrop[]>([]);
+  const [claimableAirdrops, setClaimableAirdrops] = useState<
+    ClaimableAirdrop[]
+  >([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,15 +38,22 @@ export const useAirdrops = (options?: UseAirdropsOptions): UseAirdropsReturn => 
       setError(null);
 
       try {
-        const claimable = await fetchClaimableAirdrops(walletAddress, undefined, skimZeroValued);
+        const claimable = await fetchClaimableAirdrops(
+          walletAddress,
+          undefined,
+          skimZeroValued,
+        );
         if (signal?.aborted) return;
 
         setClaimableAirdrops(claimable);
 
-        const distributorAddresses = claimable.map((item) => item.distributorAddress);
+        const distributorAddresses = claimable.map(
+          (item) => item.distributorAddress,
+        );
 
         if (distributorAddresses.length > 0) {
-          const airdropDetails = await fetchAirdropsByAddresses(distributorAddresses);
+          const airdropDetails =
+            await fetchAirdropsByAddresses(distributorAddresses);
           if (signal?.aborted) return;
           setAirdrops(airdropDetails);
         } else {
@@ -42,7 +61,8 @@ export const useAirdrops = (options?: UseAirdropsOptions): UseAirdropsReturn => 
         }
       } catch (err) {
         if (signal?.aborted) return;
-        const errorMessage = err instanceof Error ? err.message : 'Failed to fetch airdrops';
+        const errorMessage =
+          err instanceof Error ? err.message : 'Failed to fetch airdrops';
         setError(errorMessage);
         setAirdrops([]);
         setClaimableAirdrops([]);
@@ -53,7 +73,7 @@ export const useAirdrops = (options?: UseAirdropsOptions): UseAirdropsReturn => 
         }
       }
     },
-    [walletAddress, skimZeroValued]
+    [walletAddress, skimZeroValued],
   );
 
   useEffect(() => {

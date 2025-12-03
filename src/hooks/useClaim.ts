@@ -31,14 +31,22 @@ export const useClaim = (): UseClaimReturn => {
         throw new Error('No allocation found for this airdrop');
       }
 
-      const distributorAddress = userAllocation.distributorAddress || airdrop.address;
+      const distributorAddress =
+        userAllocation.distributorAddress || airdrop.address;
       const recipientAddress = publicKey.toBase58();
 
-      if (userAllocation.address.toLowerCase() !== recipientAddress.toLowerCase()) {
-        throw new Error('Wallet address mismatch. Please use the wallet that is eligible for this airdrop.');
+      if (
+        userAllocation.address.toLowerCase() !== recipientAddress.toLowerCase()
+      ) {
+        throw new Error(
+          'Wallet address mismatch. Please use the wallet that is eligible for this airdrop.',
+        );
       }
 
-      const claimantInfo = await fetchClaimant(distributorAddress, recipientAddress);
+      const claimantInfo = await fetchClaimant(
+        distributorAddress,
+        recipientAddress,
+      );
 
       const amountUnlockedStr =
         claimantInfo.rawAmountUnlocked ??
@@ -79,11 +87,17 @@ export const useClaim = (): UseClaimReturn => {
       const adapter = wallet?.adapter as Adapter | null | undefined;
       const canSign = adapter && 'signTransaction' in adapter;
       if (!adapter || !canSign) {
-        throw new Error('Wallet adapter not available or does not support signing');
+        throw new Error(
+          'Wallet adapter not available or does not support signing',
+        );
       }
 
       let proof: number[][] = [];
-      if (claimantInfo.proof && Array.isArray(claimantInfo.proof) && claimantInfo.proof.length > 0) {
+      if (
+        claimantInfo.proof &&
+        Array.isArray(claimantInfo.proof) &&
+        claimantInfo.proof.length > 0
+      ) {
         proof = claimantInfo.proof.map((p: string | number[]) => {
           if (typeof p === 'string') {
             return Array.from(Buffer.from(p, 'hex'));
@@ -93,7 +107,9 @@ export const useClaim = (): UseClaimReturn => {
       }
 
       if (proof.length === 0) {
-        throw new Error('Merkle proof is required for claiming. Please ensure you are eligible for this airdrop.');
+        throw new Error(
+          'Merkle proof is required for claiming. Please ensure you are eligible for this airdrop.',
+        );
       }
 
       const result = await distributorClient.claim(
@@ -103,7 +119,7 @@ export const useClaim = (): UseClaimReturn => {
           amountUnlocked: new BN(amountUnlockedStr),
           amountLocked: new BN(amountLockedStr),
         },
-        { invoker: adapter as SignerWalletAdapter }
+        { invoker: adapter as SignerWalletAdapter },
       );
 
       if (result.txId) {
@@ -112,7 +128,8 @@ export const useClaim = (): UseClaimReturn => {
 
       setSuccess(true);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to claim tokens';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to claim tokens';
       setError(errorMessage);
       console.error('Error claiming tokens:', err);
     } finally {

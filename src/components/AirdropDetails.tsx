@@ -5,7 +5,11 @@ import { useClaim } from '@/hooks/useClaim';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { WalletButton } from './WalletButton';
 import { getAirdropType } from '@/utils/airdrop';
-import { formatNumber, formatTokenAmount, truncateAddress } from '@/utils/format';
+import {
+  formatNumber,
+  formatTokenAmount,
+  truncateAddress,
+} from '@/utils/format';
 import { useTokenMetadata } from '@/hooks/useTokenMetadata';
 import { SOL_MINT, RPC_ENDPOINT } from '@/constants';
 import { CopyIcon } from '@/assets/CopyIcon';
@@ -18,13 +22,19 @@ export const AirdropDetails = () => {
   const { publicKey } = useWallet();
   const { details, loading, error } = useAirdropDetails(id || null);
   const { claim, loading: claiming, error: claimError, success } = useClaim();
-  const { metadata: tokenMetadata, loading: tokenLoading } = useTokenMetadata(details?.airdrop.mint);
+  const { metadata: tokenMetadata, loading: tokenLoading } = useTokenMetadata(
+    details?.airdrop.mint,
+  );
   const [copied, setCopied] = useState(false);
   const isDevnet = RPC_ENDPOINT.includes('devnet');
 
   const tokenSymbol =
     tokenMetadata?.symbol ??
-    (tokenLoading ? '...' : details?.airdrop.mint === SOL_MINT ? 'SOL' : 'TOKEN');
+    (tokenLoading
+      ? '...'
+      : details?.airdrop.mint === SOL_MINT
+        ? 'SOL'
+        : 'TOKEN');
   const tokenDecimals = tokenMetadata?.decimals ?? 9;
   const tokenPriceUSD = tokenMetadata?.priceUSD ?? null;
 
@@ -110,7 +120,9 @@ export const AirdropDetails = () => {
             <p className="text-xs uppercase tracking-[0.2em] text-purple-500 font-semibold">
               Airdrop details
             </p>
-            <h1 className="text-3xl font-extrabold text-gray-900">{airdrop.name}</h1>
+            <h1 className="text-3xl font-extrabold text-gray-900">
+              {airdrop.name}
+            </h1>
             <p className="text-sm text-gray-500 font-mono">
               <button
                 type="button"
@@ -163,7 +175,8 @@ export const AirdropDetails = () => {
               <span>Token Amount</span>
               <span className="font-semibold text-gray-900">
                 {formatTokenAmount(airdrop.totalAmountClaimed, tokenDecimals)} /{' '}
-                {formatTokenAmount(airdrop.maxTotalClaim, tokenDecimals)} {tokenSymbol}
+                {formatTokenAmount(airdrop.maxTotalClaim, tokenDecimals)}{' '}
+                {tokenSymbol}
               </span>
             </div>
             {hasTotalValue && (
@@ -182,7 +195,10 @@ export const AirdropDetails = () => {
               <>
                 <div className="text-sm text-gray-700">
                   <p>
-                    {new Date(airdrop.startVestingTs * 1000).toLocaleDateString()} -{' '}
+                    {new Date(
+                      airdrop.startVestingTs * 1000,
+                    ).toLocaleDateString()}{' '}
+                    -{' '}
                     {new Date(airdrop.endVestingTs * 1000).toLocaleDateString()}
                   </p>
                   <p className="text-xs text-gray-500 mt-1">
@@ -192,8 +208,16 @@ export const AirdropDetails = () => {
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Unlocked / Locked</span>
                   <span className="font-semibold text-gray-900">
-                    {formatTokenAmount(airdrop.totalAmountUnlocked, tokenDecimals)} /{' '}
-                    {formatTokenAmount(airdrop.totalAmountLocked, tokenDecimals)} {tokenSymbol}
+                    {formatTokenAmount(
+                      airdrop.totalAmountUnlocked,
+                      tokenDecimals,
+                    )}{' '}
+                    /{' '}
+                    {formatTokenAmount(
+                      airdrop.totalAmountLocked,
+                      tokenDecimals,
+                    )}{' '}
+                    {tokenSymbol}
                   </span>
                 </div>
               </>
@@ -208,7 +232,9 @@ export const AirdropDetails = () => {
         <div className="mb-6">
           <div className="flex justify-between text-xs text-gray-500 mb-2">
             <span>Claim Progress</span>
-            <span className="font-semibold text-gray-800">{claimedPercent.toFixed(1)}%</span>
+            <span className="font-semibold text-gray-800">
+              {claimedPercent.toFixed(1)}%
+            </span>
           </div>
           <div className="w-full bg-gray-100 rounded-full h-3 overflow-hidden">
             <div
@@ -229,10 +255,13 @@ export const AirdropDetails = () => {
                   <span>Total</span>
                 </div>
                 <p className="text-xl font-semibold text-gray-900">
-                  {formatTokenAmount(totalAllocation, tokenDecimals)} {tokenSymbol}
+                  {formatTokenAmount(totalAllocation, tokenDecimals)}{' '}
+                  {tokenSymbol}
                 </p>
                 {totalAllocationUsd !== null && (
-                  <p className="text-xs text-gray-500">≈ ${formatNumber(totalAllocationUsd)}</p>
+                  <p className="text-xs text-gray-500">
+                    ≈ ${formatNumber(totalAllocationUsd)}
+                  </p>
                 )}
               </div>
               <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-4 space-y-1">
@@ -241,10 +270,13 @@ export const AirdropDetails = () => {
                   <span>{unlockedPercent.toFixed(0)}%</span>
                 </div>
                 <p className="text-xl font-semibold text-amber-900">
-                  {formatTokenAmount(String(unlocked), tokenDecimals)} {tokenSymbol}
+                  {formatTokenAmount(String(unlocked), tokenDecimals)}{' '}
+                  {tokenSymbol}
                 </p>
                 {unlockedUsd !== null && (
-                  <p className="text-xs text-gray-500">≈ ${formatNumber(unlockedUsd)}</p>
+                  <p className="text-xs text-gray-500">
+                    ≈ ${formatNumber(unlockedUsd)}
+                  </p>
                 )}
               </div>
               <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 space-y-1">
@@ -253,10 +285,13 @@ export const AirdropDetails = () => {
                   <span>{claimedPercentUser.toFixed(0)}%</span>
                 </div>
                 <p className="text-xl font-semibold text-gray-900">
-                  {formatTokenAmount(claimed.toString(), tokenDecimals)} {tokenSymbol}
+                  {formatTokenAmount(claimed.toString(), tokenDecimals)}{' '}
+                  {tokenSymbol}
                 </p>
                 {claimedUsd !== null && (
-                  <p className="text-xs text-gray-500">≈ ${formatNumber(claimedUsd)}</p>
+                  <p className="text-xs text-gray-500">
+                    ≈ ${formatNumber(claimedUsd)}
+                  </p>
                 )}
               </div>
               <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 space-y-1">
@@ -265,10 +300,13 @@ export const AirdropDetails = () => {
                   <span>{lockedPercent.toFixed(0)}%</span>
                 </div>
                 <p className="text-xl font-semibold text-indigo-900">
-                  {formatTokenAmount(locked.toString(), tokenDecimals)} {tokenSymbol}
+                  {formatTokenAmount(locked.toString(), tokenDecimals)}{' '}
+                  {tokenSymbol}
                 </p>
                 {lockedUsd !== null && (
-                  <p className="text-xs text-gray-500">≈ ${formatNumber(lockedUsd)}</p>
+                  <p className="text-xs text-gray-500">
+                    ≈ ${formatNumber(lockedUsd)}
+                  </p>
                 )}
               </div>
             </div>

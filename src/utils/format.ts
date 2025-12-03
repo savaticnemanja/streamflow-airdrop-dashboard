@@ -4,7 +4,10 @@ const numberFormatter = new Intl.NumberFormat('en-US', {
 
 const trimTrailingZeros = (value: string) => value.replace(/\.?0+$/, '');
 
-export const formatTokenAmount = (amount: string | number, decimals = 9): string => {
+export const formatTokenAmount = (
+  amount: string | number,
+  decimals = 9,
+): string => {
   const raw = typeof amount === 'string' ? Number(amount) : amount;
   if (!Number.isFinite(raw) || raw === 0) return '0';
 
@@ -24,7 +27,8 @@ export const formatTokenAmount = (amount: string | number, decimals = 9): string
   return numberFormatter.format(normalized);
 };
 
-export const formatLamports = (lamports: string | number): string => formatTokenAmount(lamports, 9);
+export const formatLamports = (lamports: string | number): string =>
+  formatTokenAmount(lamports, 9);
 
 export const formatNumber = (num: number | string): string => {
   const value = typeof num === 'string' ? Number(num) : num;
@@ -32,9 +36,14 @@ export const formatNumber = (num: number | string): string => {
   return numberFormatter.format(value);
 };
 
-export const cleanString = (value?: string) => (value ? value.replace(/\0/g, '').trim() : '');
+export const cleanString = (value?: string) =>
+  value ? value.replace(/\0/g, '').trim() : '';
 
-export const truncateAddress = (address: string, start = 4, end = 4): string => {
+export const truncateAddress = (
+  address: string,
+  start = 4,
+  end = 4,
+): string => {
   if (address.length <= start + end) return address;
   return `${address.slice(0, start)}...${address.slice(-end)}`;
 };

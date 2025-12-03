@@ -1,16 +1,24 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { fetchAirdropById, checkEligibility } from '@/services/api';
-import type { AirdropDetails, ClaimableAirdrop, UseAirdropDetailsReturn } from '@/types';
+import type {
+  AirdropDetails,
+  ClaimableAirdrop,
+  UseAirdropDetailsReturn,
+} from '@/types';
 
-const normalizeAllocation = (allocation: ClaimableAirdrop): ClaimableAirdrop => ({
+const normalizeAllocation = (
+  allocation: ClaimableAirdrop,
+): ClaimableAirdrop => ({
   ...allocation,
   amountUnlocked: String(allocation.amountUnlocked ?? '0'),
   amountLocked: String(allocation.amountLocked ?? '0'),
   amountClaimed: String(allocation.amountClaimed ?? '0'),
 });
 
-export const useAirdropDetails = (airdropId: string | null): UseAirdropDetailsReturn => {
+export const useAirdropDetails = (
+  airdropId: string | null,
+): UseAirdropDetailsReturn => {
   const { publicKey } = useWallet();
   const walletAddress = publicKey?.toString() ?? null;
   const [details, setDetails] = useState<AirdropDetails | null>(null);
@@ -46,7 +54,7 @@ export const useAirdropDetails = (airdropId: string | null): UseAirdropDetailsRe
           if (signal?.aborted) return;
 
           const allocation = eligibleAirdrops.find(
-            (item) => item.distributorAddress === airdropId
+            (item) => item.distributorAddress === airdropId,
           );
 
           if (allocation) {
@@ -58,7 +66,9 @@ export const useAirdropDetails = (airdropId: string | null): UseAirdropDetailsRe
       } catch (err) {
         if (signal?.aborted) return;
         const errorMessage =
-          err instanceof Error ? err.message : 'Failed to fetch airdrop details';
+          err instanceof Error
+            ? err.message
+            : 'Failed to fetch airdrop details';
         setError(errorMessage);
         setDetails(null);
         console.error('Error fetching airdrop details:', err);
@@ -68,7 +78,7 @@ export const useAirdropDetails = (airdropId: string | null): UseAirdropDetailsRe
         }
       }
     },
-    [airdropId, walletAddress]
+    [airdropId, walletAddress],
   );
 
   useEffect(() => {

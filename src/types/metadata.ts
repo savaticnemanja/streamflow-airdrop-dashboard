@@ -13,7 +13,10 @@ export interface MetadataAccountData {
 }
 
 export type MetadataLoader = {
-  fromAccountAddress?: (connection: Connection, address: PublicKey) => Promise<MetadataType>;
+  fromAccountAddress?: (
+    connection: Connection,
+    address: PublicKey,
+  ) => Promise<MetadataType>;
   getPDA?: (mint: PublicKey) => Promise<PublicKey>;
   load?: (connection: Connection, address: PublicKey) => Promise<MetadataType>;
 } & typeof import('@metaplex-foundation/mpl-token-metadata').Metadata;

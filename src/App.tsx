@@ -1,5 +1,8 @@
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import { ConnectionProvider, WalletProvider } from '@solana/wallet-adapter-react';
+import {
+  ConnectionProvider,
+  WalletProvider,
+} from '@solana/wallet-adapter-react';
 import { Adapter } from '@solana/wallet-adapter-base';
 import { WalletModalProvider } from '@solana/wallet-adapter-react-ui';
 import '@solana/wallet-adapter-react-ui/styles.css';

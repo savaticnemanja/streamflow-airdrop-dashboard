@@ -21,16 +21,25 @@ import {
 import { cleanString } from '@/utils/format';
 
 const metadataCache = new Map<string, TokenMetadata>();
-const priceCache = new Map<string, { value: number | null; timestamp: number }>();
+const priceCache = new Map<
+  string,
+  { value: number | null; timestamp: number }
+>();
 const priceRequests = new Map<string, Promise<number | null>>();
 
-const fetchMintDecimals = async (connection: Connection, mintAddress: string) => {
+const fetchMintDecimals = async (
+  connection: Connection,
+  mintAddress: string,
+) => {
   const mintPubkey = new PublicKey(mintAddress);
   const mintInfo = await getMint(connection, mintPubkey);
   return mintInfo.decimals ?? 0;
 };
 
-const fetchTokenMetadata = async (connection: Connection, mintAddress: string) => {
+const fetchTokenMetadata = async (
+  connection: Connection,
+  mintAddress: string,
+) => {
   const mintPubkey = new PublicKey(mintAddress);
   const metadataClass = Metadata as MetadataLoader;
 
@@ -38,8 +47,12 @@ const fetchTokenMetadata = async (connection: Connection, mintAddress: string) =
     typeof metadataClass?.getPDA === 'function'
       ? await metadataClass.getPDA(mintPubkey)
       : PublicKey.findProgramAddressSync(
-          [METADATA_SEED, METADATA_PROGRAM_ID.toBuffer(), mintPubkey.toBuffer()],
-          METADATA_PROGRAM_ID
+          [
+            METADATA_SEED,
+            METADATA_PROGRAM_ID.toBuffer(),
+            mintPubkey.toBuffer(),
+          ],
+          METADATA_PROGRAM_ID,
         )[0];
 
   const metadataAccount =
@@ -53,7 +66,8 @@ const fetchTokenMetadata = async (connection: Connection, mintAddress: string) =
     throw new Error('Metadata account not found');
   }
 
-  const accountData = (metadataAccount as { data?: MetadataAccountData } | null)?.data ?? {};
+  const accountData =
+    (metadataAccount as { data?: MetadataAccountData } | null)?.data ?? {};
   const rawData: MetadataAccountData = accountData?.data ?? accountData ?? {};
 
   return {
@@ -97,14 +111,14 @@ const fetchPriceUSD = async (mintAddress: string): Promise<number | null> => {
         price = data?.solana?.usd ?? null;
       } else {
         const { data } = await axios.get(
-          `${COINGECKO_TOKEN_PRICE_URL}?contract_addresses=${mintAddress}&vs_currencies=usd`
+          `${COINGECKO_TOKEN_PRICE_URL}?contract_addresses=${mintAddress}&vs_currencies=usd`,
         );
         const lower = mintAddress.toLowerCase();
         price = data?.[lower]?.usd ?? null;
       }
-  } catch {
+    } catch {
       price = null;
-  }
+    }
 
     priceCache.set(mintAddress, { value: price, timestamp: Date.now() });
     return price;
@@ -117,7 +131,7 @@ const fetchPriceUSD = async (mintAddress: string): Promise<number | null> => {
 };
 
 export const useTokenMetadata = (
-  mintAddress: string | null | undefined
+  mintAddress: string | null | undefined,
 ): UseTokenMetadataReturn => {
   const { connection } = useConnection();
   const [metadata, setMetadata] = useState<TokenMetadata | null>(null);
@@ -163,7 +177,9 @@ export const useTokenMetadata = (
         const fallbackSymbol =
           chainMeta.symbol ||
           offchain.symbol ||
-          (mintAddress === SOL_MINT ? 'SOL' : mintAddress.slice(0, 4).toUpperCase());
+          (mintAddress === SOL_MINT
+            ? 'SOL'
+            : mintAddress.slice(0, 4).toUpperCase());
         const finalName = chainMeta.name || offchain.name || fallbackSymbol;
 
         const finalMetadata: TokenMetadata = {
@@ -182,7 +198,10 @@ export const useTokenMetadata = (
         }
       } catch (err) {
         if (!signal?.aborted) {
-          const errorMessage = err instanceof Error ? err.message : 'Failed to load token metadata';
+          const errorMessage =
+            err instanceof Error
+              ? err.message
+              : 'Failed to load token metadata';
           setError(errorMessage);
           setMetadata(null);
         }
@@ -192,7 +211,7 @@ export const useTokenMetadata = (
         }
       }
     },
-    [connection, mintAddress]
+    [connection, mintAddress],
   );
 
   useEffect(() => {
