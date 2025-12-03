@@ -1,13 +1,20 @@
 import { Link } from 'react-router-dom';
 import type { AirdropCardProps } from '@/types';
 import { getAirdropType, calculateClaimableAmount } from '@/utils/airdrop';
-import { formatNumber, formatTokenAmount } from '@/utils/format';
+import { formatNumber, formatTokenAmount, truncateAddress } from '@/utils/format';
 import { useTokenMetadata } from '@/hooks/useTokenMetadata';
+import { RPC_ENDPOINT } from '@/constants';
+import { useState } from 'react';
+import { CopyIcon } from '@/assets/CopyIcon';
+import { SolscanIcon } from '@/assets/SolscanIcon';
 
 const toNumber = (value?: string | null) => parseFloat(value ?? '0') || 0;
 
 export const AirdropCard = ({ airdrop, claimable }: AirdropCardProps) => {
+  const [copied, setCopied] = useState(false);
   const { metadata: tokenMetadata, loading: tokenLoading } = useTokenMetadata(airdrop.mint);
+  const isDevnet = RPC_ENDPOINT.includes('devnet');
+  const solscanUrl = `https://solscan.io/account/${airdrop.address}${isDevnet ? '?cluster=devnet' : ''}`;
 
   const tokenDecimals = tokenMetadata?.decimals ?? 9;
   const tokenPriceUSD = tokenMetadata?.priceUSD ?? null;
@@ -46,7 +53,35 @@ export const AirdropCard = ({ airdrop, claimable }: AirdropCardProps) => {
               {airdrop.name}
             </h3>
             <p className="text-xs text-gray-500 mt-1 font-mono">
-              {airdrop.address}
+              <button
+                type="button"
+                className="group inline-flex items-center gap-1 text-gray-500 hover:text-purple-600 focus:outline-none"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigator.clipboard.writeText(airdrop.address).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1200);
+                  });
+                }}
+                aria-label="Copy airdrop address"
+              >
+                <span>{truncateAddress(airdrop.address, 4, 4)}</span>
+                <span className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-gray-200 bg-gray-100">
+                  <CopyIcon copied={copied} />
+                </span>
+                <a
+                  href={solscanUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center justify-center h-6 w-6 rounded-md border border-gray-200 bg-gray-100 hover:text-purple-600"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                  aria-label="View on Solscan"
+                >
+                  <SolscanIcon />
+                </a>
+              </button>
             </p>
           </div>
           <span

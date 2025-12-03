@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
+import { useState } from 'react';
 import { useAirdropDetails } from '@/hooks/useAirdropDetails';
 import { useClaim } from '@/hooks/useClaim';
 import { useWallet } from '@solana/wallet-adapter-react';
@@ -6,7 +7,9 @@ import { WalletButton } from './WalletButton';
 import { getAirdropType } from '@/utils/airdrop';
 import { formatNumber, formatTokenAmount, truncateAddress } from '@/utils/format';
 import { useTokenMetadata } from '@/hooks/useTokenMetadata';
-import { SOL_MINT } from '@/constants';
+import { SOL_MINT, RPC_ENDPOINT } from '@/constants';
+import { CopyIcon } from '@/assets/CopyIcon';
+import { SolscanIcon } from '@/assets/SolscanIcon';
 
 const toNumber = (value?: string | number | null) => Number(value ?? 0) || 0;
 
@@ -16,6 +19,8 @@ export const AirdropDetails = () => {
   const { details, loading, error } = useAirdropDetails(id || null);
   const { claim, loading: claiming, error: claimError, success } = useClaim();
   const { metadata: tokenMetadata, loading: tokenLoading } = useTokenMetadata(details?.airdrop.mint);
+  const [copied, setCopied] = useState(false);
+  const isDevnet = RPC_ENDPOINT.includes('devnet');
 
   const tokenSymbol =
     tokenMetadata?.symbol ??
@@ -70,12 +75,14 @@ export const AirdropDetails = () => {
   const lockedPercent = (locked / allocationDenominator) * 100;
   const claimedPercentUser = (claimed / allocationDenominator) * 100;
 
-  const toUsd = (amount: number) =>
-    tokenPriceUSD ? (amount / Math.pow(10, tokenDecimals)) * tokenPriceUSD : null;
+  const toUsd = (amount: number) => {
+    if (!tokenPriceUSD) return null;
+    return (amount / Math.pow(10, tokenDecimals)) * tokenPriceUSD;
+  };
 
-  const totalValueUsd = tokenPriceUSD ? toUsd(totalClaim) : null;
-  const fallbackTotalValue = !totalValueUsd && airdrop.totalValue ? toNumber(airdrop.totalValue) : null;
-  const displayTotalValue = totalValueUsd ?? fallbackTotalValue;
+  const displayTotalValue =
+    toUsd(totalClaim) ??
+    (airdrop.totalValue ? toNumber(airdrop.totalValue) : null);
   const hasTotalValue = displayTotalValue !== null;
 
   const unlockedUsd = toUsd(unlocked);
@@ -105,7 +112,31 @@ export const AirdropDetails = () => {
             </p>
             <h1 className="text-3xl font-extrabold text-gray-900">{airdrop.name}</h1>
             <p className="text-sm text-gray-500 font-mono">
-              {truncateAddress(airdrop.address)}
+              <button
+                type="button"
+                className="group inline-flex items-center gap-1 text-gray-600 hover:text-purple-600 focus:outline-none"
+                onClick={() => {
+                  navigator.clipboard.writeText(airdrop.address).then(() => {
+                    setCopied(true);
+                    setTimeout(() => setCopied(false), 1200);
+                  });
+                }}
+                aria-label="Copy airdrop address"
+              >
+                <span>{truncateAddress(airdrop.address)}</span>
+                <span className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-gray-200 bg-gray-100">
+                  <CopyIcon copied={copied} />
+                </span>
+                <a
+                  href={`https://solscan.io/account/${airdrop.address}${isDevnet ? '?cluster=devnet' : ''}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group inline-flex items-center justify-center h-6 w-6 rounded-md border border-gray-200 bg-gray-100 hover:text-purple-600"
+                  aria-label="View on Solscan"
+                >
+                  <SolscanIcon />
+                </a>
+              </button>
             </p>
           </div>
           <span
