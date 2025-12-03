@@ -52,7 +52,7 @@ export const AirdropCard = ({ airdrop, claimable }: AirdropCardProps) => {
             <h3 className="text-xl font-semibold text-gray-900 transition-colors group-hover:text-purple-700">
               {airdrop.name}
             </h3>
-            <p className="text-xs text-gray-500 mt-1 font-mono">
+            <div className="text-xs text-gray-500 mt-1 font-mono flex items-center gap-2">
               <button
                 type="button"
                 className="group inline-flex items-center gap-1 text-gray-500 hover:text-purple-600 focus:outline-none"
@@ -69,20 +69,19 @@ export const AirdropCard = ({ airdrop, claimable }: AirdropCardProps) => {
                 <span className="inline-flex items-center justify-center h-6 w-6 rounded-md border border-gray-200 bg-gray-100">
                   <CopyIcon copied={copied} />
                 </span>
-                <a
-                  href={solscanUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group inline-flex items-center justify-center h-6 w-6 rounded-md border border-gray-200 bg-gray-100 hover:text-purple-600"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                  }}
-                  aria-label="View on Solscan"
-                >
-                  <SolscanIcon />
-                </a>
               </button>
-            </p>
+              <button
+                type="button"
+                className="group inline-flex items-center justify-center h-6 w-6 rounded-md border border-gray-200 bg-gray-100 hover:text-blue-500"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.open(solscanUrl, '_blank', 'noopener,noreferrer');
+                }}
+                aria-label="View on Solscan"
+              >
+                <SolscanIcon />
+              </button>
+            </div>
           </div>
           <span
             className={`px-3 py-1 rounded-full text-xs font-semibold shadow-sm ${

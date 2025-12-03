@@ -32,6 +32,8 @@ export const formatNumber = (num: number | string): string => {
   return numberFormatter.format(value);
 };
 
+export const cleanString = (value?: string) => (value ? value.replace(/\0/g, '').trim() : '');
+
 export const truncateAddress = (address: string, start = 4, end = 4): string => {
   if (address.length <= start + end) return address;
   return `${address.slice(0, start)}...${address.slice(-end)}`;

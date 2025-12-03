@@ -3,8 +3,22 @@ import { useConnection } from '@solana/wallet-adapter-react';
 import { Connection, PublicKey } from '@solana/web3.js';
 import { getMint } from '@solana/spl-token';
 import { Metadata } from '@metaplex-foundation/mpl-token-metadata';
-import type { TokenMetadata, UseTokenMetadataReturn } from '@/types';
-import { METADATA_PROGRAM_ID, METADATA_SEED, SOL_MINT, PRICE_CACHE_TTL } from '@/constants';
+import axios from 'axios';
+import type {
+  MetadataAccountData,
+  MetadataLoader,
+  TokenMetadata,
+  UseTokenMetadataReturn,
+} from '@/types';
+import {
+  METADATA_PROGRAM_ID,
+  METADATA_SEED,
+  SOL_MINT,
+  PRICE_CACHE_TTL,
+  COINGECKO_SOL_PRICE_URL,
+  COINGECKO_TOKEN_PRICE_URL,
+} from '@/constants';
+import { cleanString } from '@/utils/format';
 
 const metadataCache = new Map<string, TokenMetadata>();
 const priceCache = new Map<string, { value: number | null; timestamp: number }>();
@@ -14,23 +28,6 @@ const fetchMintDecimals = async (connection: Connection, mintAddress: string) =>
   const mintPubkey = new PublicKey(mintAddress);
   const mintInfo = await getMint(connection, mintPubkey);
   return mintInfo.decimals ?? 0;
-};
-
-type MetadataAccountData = {
-  name?: unknown;
-  symbol?: unknown;
-  uri?: unknown;
-  data?: {
-    name?: unknown;
-    symbol?: unknown;
-    uri?: unknown;
-  };
-};
-
-type MetadataLoader = typeof Metadata & {
-  fromAccountAddress?: (connection: Connection, address: PublicKey) => Promise<Metadata>;
-  getPDA?: (mint: PublicKey) => Promise<PublicKey>;
-  load?: (connection: Connection, address: PublicKey) => Promise<Metadata>;
 };
 
 const fetchTokenMetadata = async (connection: Connection, mintAddress: string) => {
@@ -59,23 +56,21 @@ const fetchTokenMetadata = async (connection: Connection, mintAddress: string) =
   const accountData = (metadataAccount as { data?: MetadataAccountData } | null)?.data ?? {};
   const rawData: MetadataAccountData = accountData?.data ?? accountData ?? {};
 
-  const cleanString = (value: unknown) => (typeof value === 'string' ? value : '');
-
   return {
-    name: cleanString(rawData.name ?? '').replace(/\0/g, '').trim(),
-    symbol: cleanString(rawData.symbol ?? '').replace(/\0/g, '').trim(),
-    uri: cleanString(rawData.uri ?? '').replace(/\0/g, '').trim(),
+    name: cleanString(rawData.name),
+    symbol: cleanString(rawData.symbol),
+    uri: cleanString(rawData.uri),
   };
 };
 
 const fetchOffchainMetadata = async (uri?: string) => {
   if (!uri) return {};
   try {
-    const json = await fetch(uri).then((r) => r.json());
+    const { data } = await axios.get(uri);
     return {
-      image: json?.image as string | undefined,
-      name: json?.name as string | undefined,
-      symbol: json?.symbol as string | undefined,
+      image: data?.image as string | undefined,
+      name: data?.name as string | undefined,
+      symbol: data?.symbol as string | undefined,
     };
   } catch {
     return {};
@@ -98,18 +93,14 @@ const fetchPriceUSD = async (mintAddress: string): Promise<number | null> => {
 
     try {
       if (mintAddress === SOL_MINT) {
-        const res = await fetch(
-          'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd'
-        );
-        const json = await res.json();
-        price = json?.solana?.usd ?? null;
+        const { data } = await axios.get(COINGECKO_SOL_PRICE_URL);
+        price = data?.solana?.usd ?? null;
       } else {
-        const res = await fetch(
-          `https://api.coingecko.com/api/v3/simple/token_price/solana?contract_addresses=${mintAddress}&vs_currencies=usd`
+        const { data } = await axios.get(
+          `${COINGECKO_TOKEN_PRICE_URL}?contract_addresses=${mintAddress}&vs_currencies=usd`
         );
-        const json = await res.json();
         const lower = mintAddress.toLowerCase();
-        price = json?.[lower]?.usd ?? null;
+        price = data?.[lower]?.usd ?? null;
       }
   } catch {
       price = null;

@@ -1,23 +1,33 @@
+import axios from 'axios';
+import { apiClient } from './axios';
 import type { Airdrop, ClaimableAirdrop, AirdropListResponse, ClaimantInfo } from '@/types';
-import { API_BASE_URL, DEFAULT_CHAIN, DEFAULT_LIMIT } from '@/constants';
+import { DEFAULT_CHAIN, DEFAULT_LIMIT } from '@/constants';
 
-async function handleResponse<T>(response: Response): Promise<T> {
-  if (!response.ok) {
-    const errorText = await response.text();
-    let errorMessage = `API request failed: ${response.statusText}`;
-    
-    try {
-      const errorData = JSON.parse(errorText);
-      errorMessage = errorData.detail || errorData.message || errorMessage;
-    } catch {
-      errorMessage = errorText || errorMessage;
-    }
-    
-    throw new Error(errorMessage);
+const parseApiError = (error: unknown, fallback: string): string => {
+  if (!axios.isAxiosError(error)) return fallback;
+
+  const data = error.response?.data;
+  const asObject =
+    typeof data === 'object' && data !== null ? (data as Record<string, string | undefined>) : null;
+  const message =
+    (asObject?.detail && typeof asObject.detail === 'string' && asObject.detail) ||
+    (asObject?.message && typeof asObject.message === 'string' && asObject.message) ||
+    (typeof error.response?.statusText === 'string' ? error.response.statusText : undefined) ||
+    (typeof error.message === 'string' ? error.message : undefined) ||
+    fallback;
+
+  return typeof message === 'string' && message.length > 0 ? message : fallback;
+};
+
+const request = async <T>(promise: Promise<{ data: T }>, fallback: string): Promise<T> => {
+  try {
+    const { data } = await promise;
+    return data;
+  } catch (error) {
+    const message = parseApiError(error, fallback);
+    throw new Error(message || fallback);
   }
-  
-  return response.json();
-}
+};
 
 function buildQueryString(params: Record<string, string | number | boolean | undefined>): string {
   const searchParams = new URLSearchParams();
@@ -38,11 +48,13 @@ export const fetchClaimableAirdrops = async (
   skimZeroValued: boolean = false
 ): Promise<ClaimableAirdrop[]> => {
   const queryString = buildQueryString({ limit, skimZeroValued });
-  const url = `${API_BASE_URL}/airdrops/claimable/${address}/${queryString}`;
-  
-  const response = await fetch(url);
-  const data: AirdropListResponse = await handleResponse(response);
-  
+  const url = `/airdrops/claimable/${address}/${queryString}`;
+
+  const data = await request<AirdropListResponse>(
+    apiClient.get<AirdropListResponse>(url),
+    'Failed to fetch claimable airdrops'
+  );
+
   return data.items;
 };
 
@@ -53,31 +65,22 @@ export const fetchAirdropsByAddresses = async (
   if (addresses.length === 0) {
     return [];
   }
-  
   const addressesParam = addresses.join(',');
   const queryString = buildQueryString({ chain, addresses: addressesParam });
-  const url = `${API_BASE_URL}/airdrops/${queryString}`;
-  
-  const response = await fetch(url);
-  return handleResponse<Airdrop[]>(response);
+  const url = `/airdrops/${queryString}`;
+
+  return request<Airdrop[]>(apiClient.get<Airdrop[]>(url), 'Failed to fetch airdrops');
 };
 
 export const fetchAirdropById = async (id: string): Promise<Airdrop | null> => {
-  const url = `${API_BASE_URL}/airdrops/${id}`;
-  
   try {
-    const response = await fetch(url);
-    
-    if (response.status === 404) {
-      return null;
-    }
-    
-    return handleResponse<Airdrop>(response);
+    const { data } = await apiClient.get<Airdrop>(`/airdrops/${id}`);
+    return data;
   } catch (error) {
-    if (error instanceof Error && error.message.includes('404')) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
       return null;
     }
-    throw error;
+    throw new Error(parseApiError(error, 'Failed to fetch airdrop'));
   }
 };
 
@@ -87,26 +90,18 @@ export const checkEligibility = async (
   if (claimantAddresses.length === 0) {
     return [];
   }
-  
-  const url = `${API_BASE_URL}/airdrops/check-eligibility`;
-  
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ claimantAddresses }),
-  });
-  
-  return handleResponse<ClaimableAirdrop[]>(response);
+
+  return request<ClaimableAirdrop[]>(
+    apiClient.post<ClaimableAirdrop[]>('/airdrops/check-eligibility', { claimantAddresses }),
+    'Failed to check eligibility'
+  );
 };
 
 export const fetchClaimant = async (
   distributorAddress: string,
   claimantAddress: string
 ): Promise<ClaimantInfo> => {
-  const url = `${API_BASE_URL}/airdrops/${distributorAddress}/claimants/${claimantAddress}`;
-  
-  const response = await fetch(url);
-  return handleResponse<ClaimantInfo>(response);
+  const url = `/airdrops/${distributorAddress}/claimants/${claimantAddress}`;
+
+  return request<ClaimantInfo>(apiClient.get<ClaimantInfo>(url), 'Failed to fetch claimant');
 };

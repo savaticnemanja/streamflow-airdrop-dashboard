@@ -19,5 +19,11 @@ export const API_BASE_URL =
 // RPC endpoint defaults
 export const RPC_ENDPOINT =
   import.meta.env.VITE_RPC_ENDPOINT || 'https://api.devnet.solana.com';
+
+// External price endpoints
+export const COINGECKO_SOL_PRICE_URL =
+  'https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd';
+export const COINGECKO_TOKEN_PRICE_URL =
+  'https://api.coingecko.com/api/v3/simple/token_price/solana';
 export const DEFAULT_LIMIT = 100;
 export const DEFAULT_CHAIN = 'SOLANA';

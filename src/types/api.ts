@@ -8,5 +8,4 @@ export interface ClaimantInfo {
   rawAmountLocked?: string;
   rawAmountClaimed?: string;
   proof?: string[];
-  [key: string]: unknown;
 }
